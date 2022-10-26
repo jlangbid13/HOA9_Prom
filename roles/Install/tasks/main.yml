@@ -6,12 +6,22 @@
     update_cache: yes
   when: ansible_distribution == "Ubuntu"
 
-- name: install prometheus in CentOS
-  unarchive:
-    src: https://github.com/prometheus/prometheus/releases/download/v2.39.1/prometheus-2.39.1.linux-amd64.tar.gz      
-    dest: /usr/local/bin
-    remote_src: yes
-    mode: 0755
-    owner: root
-    group: root
+- name: install prometheus requisites in CentOS
+  tags: centos, snapd, epel-release
+  dnf:
+    name:
+      - epel-release
+      - snapd
+    state: latest
   when: ansible_distribution == "CentOS" 
+
+- name: Enabling sockets for CentOS
+  tags: snapd, centos
+  command: systemctl enable --now snapd.socket
+  when: ansible_distribution == "CentOS" 
+  
+- name: Finising installation of Prometheus for CentOS
+  tags: centos, prometheus
+  command: snap install prometheus --classic
+  when: ansible_distribution == "CentOS" 
+
